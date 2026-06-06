@@ -5,15 +5,11 @@ body {
   font-family: Montserrat, sans-serif;
 }
 
-/* MAIN */
-
 .schedule-grid {
   display: grid;
   grid-template-areas:
     "date-select air-times"
     "channel-header-wrapper channel-content-wrapper";
-  /* grid-template-columns: 200px 1fr;
-  grid-template-rows: 60px 1fr; */
 
   height: 100vh;
   overflow: hidden;

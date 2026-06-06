@@ -76,7 +76,11 @@ const WINDOW_SECONDS = 6 * 60 * 60; // 6 Hours
 const MINUTES_PER_SLOT = 30;
 const PIXELS_PER_MINUTE = SLOT_WIDTH / MINUTES_PER_SLOT;
 
-async function loadSchedule() {
+const GRID = document.getElementById("scheduleGrid");
+
+let selectedDate = new Date();
+
+async function loadSchedule(date) {
   try {
     const responses = await Promise.all(
       CHANNELS.map(async (channel) => {
@@ -91,21 +95,25 @@ async function loadSchedule() {
       }),
     );
 
-    renderGrid(responses);
+    renderGrid(responses, date);
   } catch (error) {
     console.error(error);
   }
 }
 
-function renderGrid(CASTUS_DATA) {
-  const GRID = document.getElementById("scheduleGrid");
+function renderGrid(CASTUS_DATA, date) {
+  GRID.innerHTML = "";
 
   const now = new Date();
-  const timelineStart = new Date(now);
+  const timelineStart = new Date(date);
 
-  timelineStart.setMinutes(Math.floor(now.getMinutes() / 30) * 30);
-  timelineStart.setSeconds(0);
-  timelineStart.setMilliseconds(0);
+  if (date.toISOString().split("T")[0] === now.toISOString().split("T")[0]) {
+    timelineStart.setHours(now.getHours());
+    timelineStart.setMinutes(Math.floor(now.getMinutes() / 30) * 30);
+  } else {
+    timelineStart.setHours(0);
+    timelineStart.setMinutes(0);
+  }
 
   const timelineStartUnix = Math.floor(timelineStart.getTime() / 1000);
   const timelineEndUnix = timelineStartUnix + WINDOW_SECONDS;
@@ -145,7 +153,6 @@ function renderGrid(CASTUS_DATA) {
   header.addEventListener("scroll", () => {
     content.scrollLeft = header.scrollLeft;
   });
-
 }
 
 function createChannelHeader(channelData) {
@@ -297,7 +304,7 @@ function createDateSelect() {
 
     const option = document.createElement("option");
 
-    option.value = date.toISOString().split("T")[0];
+    option.value = date;
 
     option.textContent = date.toLocaleDateString([], {
       weekday: "long",
@@ -308,8 +315,11 @@ function createDateSelect() {
     dateSelect.appendChild(option);
   }
 
+  dateSelect.value = selectedDate;
+
   dateSelect.addEventListener("change", () => {
-    loadSchedule(dateSelect.value);
+    selectedDate = new Date(dateSelect.value);
+    loadSchedule(selectedDate);
   });
 
   return dateSelect;
@@ -320,7 +330,7 @@ function createTimeline(timelineStart) {
   airTimes.className = "air-times";
   airTimes.innerHTML = "";
 
-  for (let hour = 0; hour < 24; hour++) {
+  for (let hour = 0; hour < (24 - timelineStart.getHours()) * 2; hour++) {
     const time = new Date(timelineStart);
     time.setMinutes(timelineStart.getMinutes() + hour * MINUTES_PER_SLOT);
 
@@ -343,4 +353,4 @@ function createTimeline(timelineStart) {
   return airTimes;
 }
 
-loadSchedule();
+loadSchedule(selectedDate);
