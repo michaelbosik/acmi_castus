@@ -15,6 +15,21 @@ body {
   overflow: hidden;
 }
 
+.static-container {
+  overflow: hidden;
+  position: static;
+}
+
+.scroll-container {
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+
+.top-row {
+  top: 0;
+  height: 30px;
+}
+
 .channel-header-wrapper {
   grid-area: channel-header-wrapper;
 
@@ -25,7 +40,7 @@ body {
 
 .channel-content-wrapper {
   grid-area: channel-content-wrapper;
-  overflow: scroll;
+  /* overflow: scroll; */
 }
 
 .date-select {
@@ -51,7 +66,7 @@ body {
 .air-times {
   grid-area: air-times;
   display: flex;
-  overflow-x: scroll;
+  /* overflow-x: scroll; */
 }
 
 .channel-header {
@@ -122,6 +137,8 @@ body {
   box-sizing: border-box;
   padding: 16px;
   overflow: hidden;
+
+  display:inline-block;
 
   border-right: 2.5px solid #334155;
   border-left: 2.5px solid #334155;

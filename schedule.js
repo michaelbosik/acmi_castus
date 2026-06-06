@@ -102,7 +102,11 @@ async function loadSchedule(date) {
 }
 
 function renderGrid(CASTUS_DATA, date) {
-  GRID.innerHTML = "";
+  // GRID.innerHTML = "";
+  GRID.innerHTML = `
+      <div class="static-container" id="staticContainer"></div>
+      <div class="scroll-container" id="scrollContainer"></div>
+    `;
 
   const now = new Date();
   const timelineStart = new Date(date);
@@ -118,8 +122,10 @@ function renderGrid(CASTUS_DATA, date) {
   const timelineStartUnix = Math.floor(timelineStart.getTime() / 1000);
   const timelineEndUnix = timelineStartUnix + WINDOW_SECONDS;
 
-  GRID.appendChild(createDateSelect());
-  GRID.appendChild(createTimeline(timelineStart));
+  const staticContainer = document.getElementById("staticContainer");
+  const scrollContainer = document.getElementById("scrollContainer");
+  staticContainer.appendChild(createDateSelect());
+  scrollContainer.appendChild(createTimeline(timelineStart));
 
   const channelHeaderWrapper = document.createElement("div");
   channelHeaderWrapper.className = "channel-header-wrapper";
@@ -140,19 +146,8 @@ function renderGrid(CASTUS_DATA, date) {
     );
   });
 
-  GRID.appendChild(channelHeaderWrapper);
-  GRID.appendChild(channelContentWrapper);
-
-  const header = document.querySelector(".air-times");
-  const content = document.querySelector(".channel-content-wrapper");
-
-  content.addEventListener("scroll", () => {
-    header.scrollLeft = content.scrollLeft;
-  });
-
-  header.addEventListener("scroll", () => {
-    content.scrollLeft = header.scrollLeft;
-  });
+  staticContainer.appendChild(channelHeaderWrapper);
+  scrollContainer.appendChild(channelContentWrapper);
 }
 
 function createChannelHeader(channelData) {
@@ -262,6 +257,9 @@ function createChannelContent(
     const left = offsetMinutes * PIXELS_PER_MINUTE;
     const width = durationMinutes * PIXELS_PER_MINUTE;
 
+    const timeblocks = Math.floor(durationMinutes / MINUTES_PER_SLOT);
+    // const width = timeblocks * SLOT_WIDTH;
+
     const block = document.createElement("div");
 
     block.className = `program-block ${seg.isLive && seg.scheduled ? "live" : ""}`;
@@ -292,7 +290,7 @@ function createChannelContent(
 function createDateSelect() {
   const dateSelect = document.createElement("select");
   dateSelect.id = "dateSelect";
-  dateSelect.className = "date-select date";
+  dateSelect.className = "date-select date top-row";
   dateSelect.innerHTML = "";
 
   const today = new Date();
@@ -327,7 +325,7 @@ function createDateSelect() {
 
 function createTimeline(timelineStart) {
   const airTimes = document.createElement("div");
-  airTimes.className = "air-times";
+  airTimes.className = "air-times top-row";
   airTimes.innerHTML = "";
 
   for (let hour = 0; hour < (24 - timelineStart.getHours()) * 2; hour++) {
