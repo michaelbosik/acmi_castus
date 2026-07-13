@@ -71,7 +71,7 @@ const CHANNELS = [
   },
 ];
 
-const SLOT_WIDTH = 360;
+const SLOT_WIDTH = 240;
 const WINDOW_SECONDS = 6 * 60 * 60; // 6 Hours
 const MINUTES_PER_SLOT = 30;
 const PIXELS_PER_MINUTE = SLOT_WIDTH / MINUTES_PER_SLOT;
@@ -102,7 +102,6 @@ async function loadSchedule(date) {
 }
 
 function renderGrid(CASTUS_DATA, date) {
-  // GRID.innerHTML = "";
   GRID.innerHTML = `
       <div class="static-container" id="staticContainer"></div>
       <div class="scroll-container" id="scrollContainer"></div>
@@ -190,17 +189,26 @@ function createChannelContent(
 ) {
   const content = document.createElement("div");
   content.className = `channel-content ${channelData.name.toLowerCase()} ${channelData.name.toLowerCase()}-content`;
+  content.style.width = `${(WINDOW_SECONDS / 60) * PIXELS_PER_MINUTE}px`;
+
   const segments = [];
 
   for (const item of items) {
     const start = item.start_unix.unix;
     const end = item.end_unix.unix;
+    const nowUnix = Math.floor(Date.now() / 1000);
 
     const displayStart = floorTo15(start);
     const displayEnd = ceilTo15(end);
 
-    const duration_minutes = (displayEnd - displayStart) / 60;
-    const width = duration_minutes * PIXELS_PER_MINUTE;
+    const clippedStart = Math.max(displayStart, timelineStartUnix);
+    const clippedEnd = Math.min(displayEnd, timelineEndUnix);
+
+    if (clippedEnd <= clippedStart) continue;
+
+    const durationMinutes = (clippedEnd - clippedStart) / 60;
+    const width = durationMinutes * PIXELS_PER_MINUTE;
+    const left = ((clippedStart - timelineStartUnix) / 60) * PIXELS_PER_MINUTE;
 
     const seg = {
       scheduled: item.announce,
@@ -215,11 +223,12 @@ function createChannelContent(
       program: item.metadata.program || "",
       start,
       end,
-      displayStart,
-      displayEnd,
-      duration_minutes,
+      displayStart: clippedStart,
+      displayEnd: clippedEnd,
+      duration_minutes: durationMinutes,
       width,
-      isLive: start <= timelineStartUnix && end > timelineStartUnix,
+      left,
+      isLive: start <= nowUnix && end > nowUnix,
       isToday: end >= timelineStartUnix && start <= timelineEndUnix,
     };
 
@@ -227,20 +236,15 @@ function createChannelContent(
       seg.title = seg.title.split("/").pop().split(".mp4")[0];
     }
 
-    if (seg.end - timelineStartUnix <= seg.duration_minutes) {
-      seg.duration_minutes = seg.end - timelineStartUnix;
-    }
+    // if (
+    //   segments.length > 0 &&
+    //   !segments[segments.length - 1].scheduled &&
+    //   !seg.scheduled
+    // ) {
+    //   seg.start = segments[segments.length - 1].start;
+    //   segments.pop();
+    // }
 
-    if (
-      segments.length > 0 &&
-      !segments[segments.length - 1].scheduled &&
-      !seg.scheduled
-    ) {
-      seg.start = segments[segments.length - 1].start;
-      segments.pop();
-    }
-
-    // if (seg.isToday || seg.isLive) {
     if (seg.isToday) {
       segments.push(seg);
     }
@@ -253,30 +257,24 @@ function createChannelContent(
 
   segments.forEach((seg) => {
     const startDate = new Date(seg.start * 1000);
-
-    const offsetMinutes = (seg.displayStart - timelineStartUnix) / 60;
-    const left = offsetMinutes * PIXELS_PER_MINUTE;
-
     const block = document.createElement("div");
 
     block.className = `program-block ${seg.isLive && seg.scheduled ? "live" : ""}`;
     block.innerHTML = `
-            ${seg.isLive && seg.scheduled ? `<div class="live-badge">LIVE</div>` : ""}
 
+            <div class="program-title">
+              ${seg.title}
+            </div>
             <div class="program-time">
               ${startDate.toLocaleTimeString([], {
                 hour: "numeric",
                 minute: "2-digit",
               })}
             </div>
-
-            <div class="program-title">
-              ${seg.title}
-            </div>
         `;
 
     block.style.width = `${seg.width}px`;
-    // block.style.left = `${left}px`;
+    block.style.left = `${seg.left}px`;
 
     content.appendChild(block);
   });
@@ -312,24 +310,24 @@ function createDateSelect() {
 
   dateSelect.value = selectedDate;
 
-  dateSelect.addEventListener("change", () => {
-    selectedDate = new Date(dateSelect.value);
-    loadSchedule(selectedDate);
-  });
+  // DATE SELECTION FUNCTIONALITY DISABLED FOR NOW
+
+  // dateSelect.addEventListener("change", () => {
+  //   selectedDate = new Date(dateSelect.value);
+  //   loadSchedule(selectedDate);
+  // });
 
   return dateSelect;
 }
 
 function createTimeline(timelineStart) {
+  const totalSlots = WINDOW_SECONDS / (MINUTES_PER_SLOT * 60);
   const airTimes = document.createElement("div");
   airTimes.className = "air-times top-row";
+  airTimes.style.width = `${totalSlots * SLOT_WIDTH}px`;
   airTimes.innerHTML = "";
 
-  for (
-    let hour = 0;
-    hour < (24 - timelineStart.getHours()) * (60 / MINUTES_PER_SLOT);
-    hour++
-  ) {
+  for (let hour = 0; hour < totalSlots; hour++) {
     const time = new Date(timelineStart);
     time.setMinutes(timelineStart.getMinutes() + hour * MINUTES_PER_SLOT);
 
