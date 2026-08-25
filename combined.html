@@ -1,3 +1,11 @@
+<html>
+
+<div class="live-view" id="embedContainer"></div>
+<div class="schedule-grid" id="scheduleGrid">
+    <div class="static-container" id="staticContainer"></div>
+    <div class="scroll-container" id="scrollContainer"></div>
+</div>
+
 <script>
     const API_URL = "https://api.castus.tv/ccs/v1/schedule/acmi/";
     const CHANNELS = [{
@@ -21,6 +29,19 @@
                     channel: "31",
                 },
             ],
+            embed: `
+        <iframe
+          src="https://cloud.castus.tv/vod/acmi/embed/672a4a4c4305ae377e9ef892?page=HOME&type=live&embedID=672a4a4c4305ae377e9ef892"
+          title="CASTUS Embedded Video Player"
+          allowtransparency="true"
+          frameborder="0"
+          width="650"
+          height="315"
+          sandbox="allow-same-origin allow-forms allow-scripts"
+          scrolling="auto"
+          allowfullscreen
+          style="border:none;border-radius:4px;"
+        ></iframe>`
         },
         {
             id: "ch2",
@@ -43,6 +64,19 @@
                     channel: "24",
                 },
             ],
+            embed: `
+        <iframe
+          src="https://cloud.castus.tv/vod/acmi/embed/672a4a7b4305ae377e9ef89a?page=HOME&type=live&embedID=672a4a7b4305ae377e9ef89a"
+          title="CASTUS Embedded Video Player"
+          allowtransparency="true"
+          frameborder="0"
+          width="650"
+          height="315"
+          sandbox="allow-same-origin allow-forms allow-scripts"
+          scrolling="auto"
+          allowfullscreen
+          style="border:none;border-radius:4px;"
+        ></iframe>`
         },
         {
             id: "ch3",
@@ -65,6 +99,19 @@
                     channel: "26",
                 },
             ],
+            embed: `
+        <iframe
+          src="https://cloud.castus.tv/vod/acmi/embed/672a4a9a4305ae377e9ef8a5?page=HOME&type=live&embedID=672a4a9a4305ae377e9ef8a5"
+          title="CASTUS Embedded Video Player"
+          allowtransparency="true"
+          frameborder="0"
+          width="650"
+          height="315"
+          sandbox="allow-same-origin allow-forms allow-scripts"
+          scrolling="auto"
+          allowfullscreen
+          style="border:none;border-radius:4px;"
+        ></iframe>`
         },
     ];
 
@@ -153,13 +200,11 @@
         const icon = document.createElement("span");
         icon.className = `channel-icon ${channelData.name.toLowerCase()}`;
         icon.innerHTML = `<img src=${channelData.icon} alt="${channelData.name} icon" />`;
-
         channelHeader.appendChild(icon);
 
         const label = document.createElement("span");
         label.className = `channel-label ${channelData.name.toLowerCase()}`;
         label.textContent = channelData.name.toUpperCase();
-
         channelHeader.appendChild(label);
 
         const channelInfo = document.createElement("span");
@@ -172,8 +217,15 @@
         </div>
       `;
         });
-
         channelHeader.appendChild(channelInfo);
+
+        const watchButton = document.createElement("div");
+        watchButton.className = `watch-button ${channelData.name.toLowerCase()}`;
+        watchButton.addEventListener("click", () => {
+            renderEmbed(channelData);
+        });
+        watchButton.textContent = "Watch";
+        channelHeader.appendChild(watchButton);
 
         return channelHeader;
     }
@@ -196,8 +248,8 @@
             const end = item.end_unix.unix;
             const nowUnix = Math.floor(Date.now() / 1000);
 
-            const displayStart = floorTo15(start);
-            const displayEnd = ceilTo15(end);
+            const displayStart = floorTo5(start);
+            const displayEnd = ceilTo5(end);
 
             const clippedStart = Math.max(displayStart, timelineStartUnix);
             const clippedEnd = Math.min(displayEnd, timelineEndUnix);
@@ -215,7 +267,8 @@
                     item.metadata.title :
                     item.name ?
                     item.name :
-                    "Local Announcements" : "Local Announcements",
+                    "Local Announcements" :
+                    "Local Announcements",
                 description: item.metadata.description || "",
                 program: item.metadata.program || "",
                 start,
@@ -246,10 +299,10 @@
                 segments.push(seg);
             }
 
-            if (seg.isToday && segments.length > 1 && seg.duration_minutes <= 15) {
+            if (seg.isToday && segments.length > 1 && seg.duration_minutes <= 5) {
                 segments[segments.length - 2].end = seg.end;
                 segments.pop();
-            } // TODO Add logic to merge segments of same program that are less than 10 minutes in length
+            } // TODO Add logic to merge segments of same program that are less than 5 minutes in length
         }
 
         segments.forEach((seg) => {
@@ -309,10 +362,10 @@
 
         // DATE SELECTION FUNCTIONALITY DISABLED FOR NOW
 
-        // dateSelect.addEventListener("change", () => {
-        //   selectedDate = new Date(dateSelect.value);
-        //   loadSchedule(selectedDate);
-        // });
+        dateSelect.addEventListener("change", () => {
+            selectedDate = new Date(dateSelect.value);
+            loadSchedule(selectedDate);
+        });
 
         return dateSelect;
     }
@@ -347,217 +400,244 @@
         return airTimes;
     }
 
-    const FIFTEEN_MINUTES = 15 * 60;
+    const FIVE_MINUTES = 5 * 60;
 
-    function roundToNearest15(unixTime) {
-        return Math.round(unixTime / FIFTEEN_MINUTES) * FIFTEEN_MINUTES;
+    function roundToNearest5(unixTime) {
+        return Math.round(unixTime / FIVE_MINUTES) * FIVE_MINUTES;
     }
 
-    function floorTo15(unixTime) {
-        return Math.floor(unixTime / FIFTEEN_MINUTES) * FIFTEEN_MINUTES;
+    function floorTo5(unixTime) {
+        return Math.floor(unixTime / FIVE_MINUTES) * FIVE_MINUTES;
     }
 
-    function ceilTo15(unixTime) {
-        return Math.ceil(unixTime / FIFTEEN_MINUTES) * FIFTEEN_MINUTES;
+    function ceilTo5(unixTime) {
+        return Math.ceil(unixTime / FIVE_MINUTES) * FIVE_MINUTES;
+    }
+
+    function renderEmbed(channelData) {
+        const embedContainer = document.getElementById("embedContainer");
+        embedContainer.innerHTML = channelData.embed;
     }
 
     loadSchedule(selectedDate);
+    renderEmbed(CHANNELS[0]);
 </script>
 <style>
     body {
-        margin: 0;
-        color: white;
-        font-family: Montserrat, sans-serif;
-    }
+  margin: 0;
+  color: white;
+  font-family: Montserrat, sans-serif;
+}
 
-    .schedule-grid {
-        display: grid;
-        grid-template-areas:
-            "date-select air-times"
-            "channel-header-wrapper channel-content-wrapper";
+.live-view {
+  text-align: center;
+  height:fit-content;
+  width: 100%;
+}
 
-        height: 100vh;
-        overflow: hidden;
-    }
+.schedule-grid {
+  display: grid;
+  grid-template-areas:
+    "date-select air-times"
+    "channel-header-wrapper channel-content-wrapper";
 
-    .static-container {
-        overflow: hidden;
-        position: static;
-    }
+  height: 100vh;
+  overflow: hidden;
+}
 
-    .scroll-container {
-        overflow-x: scroll;
-        overflow-y: hidden;
-    }
+.static-container {
+  overflow: hidden;
+  position: static;
+}
 
-    .top-row {
-        top: 0;
-        height: 30px;
-    }
+.scroll-container {
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
 
-    .channel-header-wrapper {
-        grid-area: channel-header-wrapper;
+.top-row {
+  top: 0;
+  height: 30px;
+}
 
-        overflow: hidden;
+.channel-header-wrapper {
+  grid-area: channel-header-wrapper;
 
-        background: #2c643a;
-    }
+  overflow: hidden;
 
-    .channel-content-wrapper {
-        grid-area: channel-content-wrapper;
-        /* overflow: scroll; */
-    }
+  background: #2c643a;
+}
 
-    .date-select {
-        grid-area: date-select;
+.channel-content-wrapper {
+  grid-area: channel-content-wrapper;
+  /* overflow: scroll; */
+}
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+.date-select {
+  grid-area: date-select;
 
-        background: #2c643a;
-        color: white;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    .air-times {
-        grid-area: air-times;
-        display: flex;
-        /* overflow-x: scroll; */
-    }
+  background: #2c643a;
+  color: white;
+}
 
-    .channel-header {
-        min-width: 140px;
-        display: flex;
-        flex-direction: column;
-        font-weight: bold;
-        font-size: 1.1rem;
-        padding: 5px;
-        justify-content: center;
-        text-align: center;
-        height: 180px;
-    }
+.air-times {
+  grid-area: air-times;
+  display: flex;
+  /* overflow-x: scroll; */
+}
 
-    .channel-content {
-        height: 180px;
-        padding-top: 5px;
-        padding-bottom: 5px;
-        margin: auto;
-        position: relative;
-    }
+.channel-header {
+  min-width: 140px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 20px;
+  justify-content: center;
+  text-align: center;
+  height: 150px;
+}
 
-    .channel-label {
-        margin-bottom: 5px;
-    }
+.channel-content {
+  height: 180px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin: auto;
+  position: relative;
+}
 
-    .channel-icon img {
-        max-width: 24px;
-        padding: 5px;
-    }
+.channel-label {
+  margin-bottom: 5px;
+}
 
-    .channel-info-item {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 6px;
-        font-size: 0.7rem;
-    }
+.channel-icon img {
+  display: block;
+  margin: auto;
+  width: 100%;
+  max-width: 24px;
+  padding: 5px;
+}
 
-    .public {
-        background: #a5629b;
-    }
+.channel-info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.7rem;
+}
 
-    .education {
-        background: #e5a324;
-    }
+.watch-button {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #0d6f40 !important;
+  color: white;
+  border-radius: 4px;
+  border: 1px solid white;
+  font-size: 0.8rem;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  margin: 5px auto 0 auto;
+}
 
-    .government {
-        background: #518aa8;
-    }
+.watch-button:hover {
+  background-color: #0b5e34 !important;
+}
 
-    .time-slot {
-        /* width: 200px; */
-        flex-shrink: 0;
+.public {
+  background: #a5629b;
+}
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+.education {
+  background: #e5a324;
+}
 
-        border-left: 1px solid #444;
-        background: #0d6f40;
-        color: white;
-    }
+.government {
+  background: #518aa8;
+}
 
-    .public-content .program-block {
-        background: #934280;
-    }
+.time-slot {
+  /* width: 200px; */
+  flex-shrink: 0;
 
-    .public-content .program-block:hover {
-        background: #802164;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    .education-content .program-block {
-        background: #d08129;
-    }
+  border-left: 1px solid #444;
+  background: #0d6f40;
+  color: white;
+}
 
-    .education-content .program-block:hover {
-        background: #bd6028;
-    }
+.public-content .program-block {
+  background: #934280;
+}
 
-    .government-content .program-block {
-        background: #466a89;
-    }
+.public-content .program-block:hover {
+  background: #802164;
+}
 
-    .government-content .program-block:hover {
-        background: #3a4a69;
-    }
+.education-content .program-block {
+  background: #d08129;
+}
 
-    .program-block {
-        top: 5px;
-        bottom: 5px;
-        box-sizing: border-box;
-        padding: 12px;
-        overflow: hidden;
+.education-content .program-block:hover {
+  background: #bd6028;
+}
 
-        display: inline-block;
-        position: absolute;
+.government-content .program-block {
+  background: #466a89;
+}
 
-        border: 1px solid #444;
+.government-content .program-block:hover {
+  background: #3a4a69;
+}
 
-        background: #0d6f40;
+.program-block {
+  top: 5px;
+  bottom: 5px;
+  box-sizing: border-box;
+  padding: 12px;
+  overflow: hidden;
 
-        transition: 0.2s ease;
-    }
+  display: inline-block;
+  position: absolute;
 
-    .program-block.live::before {
-        content: "";
+  border: 1px solid #444;
 
-        position: absolute;
-        inset: 0;
+  background: #0d6f40;
 
-        transform-origin: left center;
+  transition: 0.2s ease;
+}
 
-        animation: liveProgress linear forwards;
+.program-block.live::before {
+  content: "";
 
-        pointer-events: none;
-    }
+  position: absolute;
+  inset: 0;
 
-    .program-time {
-        color: #ffffff;
-        font-size: 0.8rem;
-        margin-bottom: 6px;
-        font-weight: bold;
-    }
+  transform-origin: left center;
 
-    .program-title {
-        font-size: 1rem;
-        font-weight: bold;
-        line-height: 1.3;
-        margin-bottom: 6px;
-        text-overflow: ellipsis;
-    }
+  animation: liveProgress linear forwards;
+
+  pointer-events: none;
+}
+
+.program-time {
+  color: #ffffff;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.program-title {
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1.3;
+  margin-bottom: 6px;
+  text-overflow: ellipsis;
+}
+
 </style>
 
-<div class="schedule-grid" id="scheduleGrid">
-    <div class="static-container" id="staticContainer"></div>
-    <div class="scroll-container" id="scrollContainer"></div>
-</div>
-<!-- <script src="schedule.js"></script> -->
+</html>

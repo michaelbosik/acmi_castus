@@ -1,18 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <title>ACMi Live Schedule</title>
-        <link rel="stylesheet" href="styles.css" />
-    </head>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <body>
-        <div class="schedule-grid" id="scheduleGrid">
-            <div class="static-container" id="staticContainer"></div>
-            <div class="scroll-container" id="scrollContainer"></div>
+    <title>ACMi Live Schedule</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <div class="live-view">
+
+        <div class="live-player" id="embedContainer"></div>
+
+        <div class="currently-watching" id="currentlyWatching">
+            <div class="live-status">
+                <span class="live-dot"></span>
+                LIVE
+            </div>
+
+            <div class="currently-channel" id="currentlyChannel">
+                PUBLIC
+            </div>
+
+            <div class="currently-title" id="currentlyTitle">
+                Currently Watching
+            </div>
+
+            <div class="currently-description" id="currentlyDescription">
+            </div>
+
+            <div class="currently-time" id="currentlyTime">
+            </div>
         </div>
-        <script src="schedule.js"></script>
-    </body>
+
+    </div>
+    <div class="schedule-grid" id="scheduleGrid">
+        <div class="static-container" id="staticContainer"></div>
+        <div class="scroll-container" id="scrollContainer"></div>
+    </div>
+    <script src="schedule.js"></script>
+</body>
+
 </html>
