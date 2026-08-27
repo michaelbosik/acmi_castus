@@ -259,11 +259,9 @@ function createChannelContent(
 
         const nowUnix = Math.floor(Date.now() / 1000);
 
-        let title = item.announce ?
-            item.metadata?.title || item.name || "Local Announcements" :
-            "Local Announcements";
+        let title = item.opath.includes("CBB/") ? "Local Announcements" : item.metadata?.title || item.name;
 
-        if (title.includes(".mp4")) {
+        if (title.includes(".mp4")) { //mov, mpg, vob, avi, m4v, mkv
             title = title.split("/").pop().split(".mp4")[0];
         }
 
@@ -364,9 +362,9 @@ function createDateSelect(selectedDate) {
     today.setHours(0, 0, 0, 0);
 
     // Use the supplied date, or today
-    const currentSelectedDate = selectedDate
-        ? new Date(selectedDate)
-        : new Date(today);
+    const currentSelectedDate = selectedDate ?
+        new Date(selectedDate) :
+        new Date(today);
 
     currentSelectedDate.setHours(0, 0, 0, 0);
 
@@ -405,7 +403,7 @@ function createDateSelect(selectedDate) {
     dateSelect.addEventListener("change", () => {
 
         const [year, month, day] =
-            dateSelect.value.split("-").map(Number);
+        dateSelect.value.split("-").map(Number);
 
         const newSelectedDate =
             new Date(year, month - 1, day);
