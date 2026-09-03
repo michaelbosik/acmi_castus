@@ -259,7 +259,7 @@ function createChannelContent(
 
         const nowUnix = Math.floor(Date.now() / 1000);
 
-        let title = item.opath.includes("CBB/") ? "Local Announcements" : item.metadata?.title || item.name;
+        let title = item.opath.includes("CBB/") ? "Community Bulletin Board" : item.metadata?.title || item.name;
 
         if (title.includes(".mp4")) { //mov, mpg, vob, avi, m4v, mkv
             title = title.split("/").pop().split(".mp4")[0];
@@ -503,8 +503,8 @@ function updateCurrentlyWatching(channelData) {
     const title = currentItem.announce ?
         currentItem.metadata?.title ||
         currentItem.name ||
-        "Local Announcements" :
-        "Local Announcements";
+        "Community Bulletin Board" :
+        "Community Bulletin Board";
 
     document.getElementById("currentlyTitle").textContent =
         title;
